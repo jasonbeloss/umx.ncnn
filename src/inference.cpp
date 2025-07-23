@@ -37,8 +37,10 @@ std::vector<Eigen::MatrixXf> umxcpp::umx_inference(
     // stack on top of each other for 2974 total input features
     //
     // this will be fed into the first linear encoder into hidden size
-    Eigen::MatrixXf x(nb_frames, nb_bins_stacked_cropped);
+    Eigen::MatrixXf x(nb_frames, nb_bins_stacked_cropped); //2, 2974
     Eigen::MatrixXf x_target(nb_frames, 4098);
+
+    printf("mix_mag [%d, %d, %d]\n", mix_mag.dimension(0), mix_mag.dimension(1), mix_mag.dimension(2));
 
     int nb_bins_cropped = nb_bins_stacked_cropped / 2;  // 1487
 
@@ -95,7 +97,7 @@ std::vector<Eigen::MatrixXf> umxcpp::umx_inference(
         int rows = output.h;
         int bins = output.w;
         int channels = output.c;        
-        Eigen::MatrixXf x_out(rows, bins * channels);
+        Eigen::MatrixXf x_out(rows, bins * channels);  // 2 × 4098
         for (int h = 0; h < rows; ++h) {
             for (int w = 0; w < bins; ++w) {
                 for (int c = 0; c < channels; ++c) {

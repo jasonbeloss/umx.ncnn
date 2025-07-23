@@ -46,23 +46,22 @@ bool umxcpp::load_umx_model(struct umx_model *model)
 //  "bass", "drums", "other", "vocals"
     model->nets.resize(4);
     std::vector<std::string> param_paths = {
-        "./model/bass.opt.param",
-        "./model/drums.opt.param",
-        "./model/other.opt.param",
-        "./model/vocals.opt.param"
+        "./model/bass.ncnn.param",
+        "./model/drums.ncnn.param",
+        "./model/other.ncnn.param",
+        "./model/vocals.ncnn.param"
     };
 
     std::vector<std::string> bin_paths = {
-        "./model/bass.opt.bin",
-        "./model/drums.opt.bin",
-        "./model/other.opt.bin",
-        "./model/vocals.opt.bin"
+        "./model/bass.ncnn.bin",
+        "./model/drums.ncnn.bin",
+        "./model/other.ncnn.bin",
+        "./model/vocals.ncnn.bin"
     };
 
     int ret = 0;
     for (int i = 0; i < 4; ++i) {
         model->nets[i] = std::make_unique<ncnn::Net>();
-        model->nets[i].get()->opt.use_vulkan_compute = true;
         ret = model->nets[i].get()->load_param(param_paths[i].c_str());
         printf("Load %s success ret(%d) \n", param_paths[i].c_str(), ret);
         if (ret != 0) {

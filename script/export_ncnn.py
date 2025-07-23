@@ -111,7 +111,7 @@ if __name__ == '__main__':
     torchhub_path = Path(torch.hub.get_dir()) / "checkpoints"
 
     # Define input shape for the model (batch_size, sequence_length, num_features)
-    input_shape = (1, 2, 2049, 4)  # Adjust based on your model's input shape
+    input_shape = (1, 2, 2049, 2)  # Adjust based on your model's input shape
 
     # Export each target model to ONNX
     for target_name in ["bass", "drums", "other", "vocals"]:
