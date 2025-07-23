@@ -1,0 +1,4 @@
+# Hashes of file build rules.
+e57c72fbad186e3e41615e2487173b56 CMakeFiles/lint
+532e7cd6f26df17feaa90999a3df07e3 vendor/ncnn/tools/caffe/caffe.pb.h
+ca6e9becaf835ef93439c9e3f3d85c91 vendor/ncnn/tools/onnx/onnx.pb.h

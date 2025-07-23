@@ -5,7 +5,6 @@ Subject: [PATCH 1/2] Modify for open-unmix LSTM
 
 Signed-off-by: Jason <jiacheng.du@JasondeMacBook-Air.local>
 ---
- CMakeLists.txt                     |  2 +-
  src/layer/arm/lstm_arm.cpp         | 42 ++++++++++++++++++------------
  src/layer/arm/lstm_arm.h           |  2 ++
  src/layer/arm/lstm_arm_asimdhp.cpp | 21 ++++++++-------
@@ -14,19 +13,6 @@ Signed-off-by: Jason <jiacheng.du@JasondeMacBook-Air.local>
  src/layer/x86/lstm_x86.h           |  5 ++++
  7 files changed, 61 insertions(+), 37 deletions(-)
 
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 31e944e9..fb66510f 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -68,7 +68,7 @@ option(NCNN_SIMPLEOMP "minimal openmp runtime emulation" OFF)
- option(NCNN_SIMPLESTL "minimal cpp stl structure emulation" OFF)
- option(NCNN_SIMPLEMATH "minimal cmath" OFF)
- option(NCNN_THREADS "build with threads" ON)
--option(NCNN_BENCHMARK "print benchmark information for every layer" OFF)
-+option(NCNN_BENCHMARK "print benchmark information for every layer" ON)
- option(NCNN_C_API "build with C api" ON)
- option(NCNN_PLATFORM_API "build with platform api candy" ON)
- option(NCNN_PIXEL "convert and resize from/to image pixel" ON)
 diff --git a/src/layer/arm/lstm_arm.cpp b/src/layer/arm/lstm_arm.cpp
 index a6db35ad..56473651 100644
 --- a/src/layer/arm/lstm_arm.cpp

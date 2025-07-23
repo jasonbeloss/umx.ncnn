@@ -1,0 +1,18 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/libnyquist/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/src/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/benchmark/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/examples/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/tools/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/tools/caffe/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/tools/mxnet/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/tools/onnx/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/tools/darknet/cmake_install.cmake",
+		"/Users/jiacheng.du/Documents/GitHub/umx.ncnn/build/vendor/ncnn/tools/quantize/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

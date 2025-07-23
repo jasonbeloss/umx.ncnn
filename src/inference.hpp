@@ -9,7 +9,7 @@
 namespace umxcpp
 {
 
-const float SEGMENT_LEN_SECS = 0.0f;
+const float SEGMENT_LEN_SECS = 0.1f;
 // const float MAX_SHIFT_SECS = 0.5;   // max shift
 const float OVERLAP = 0.2;         // overlap between segments
 const float TRANSITION_POWER = 1.0; // transition between segments
