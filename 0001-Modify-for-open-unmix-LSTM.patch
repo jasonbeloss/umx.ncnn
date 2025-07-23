@@ -1,0 +1,251 @@
+From e462f8a61cae65a4d4e2081a241aede58f8e5ce9 Mon Sep 17 00:00:00 2001
+From: Jason <jiacheng.du@JasondeMacBook-Air.local>
+Date: Thu, 17 Apr 2025 18:47:16 +0800
+Subject: [PATCH 1/2] Modify for open-unmix LSTM
+
+Signed-off-by: Jason <jiacheng.du@JasondeMacBook-Air.local>
+---
+ CMakeLists.txt                     |  2 +-
+ src/layer/arm/lstm_arm.cpp         | 42 ++++++++++++++++++------------
+ src/layer/arm/lstm_arm.h           |  2 ++
+ src/layer/arm/lstm_arm_asimdhp.cpp | 21 ++++++++-------
+ src/layer/lstm.cpp                 |  2 ++
+ src/layer/x86/lstm_x86.cpp         | 24 ++++++++++-------
+ src/layer/x86/lstm_x86.h           |  5 ++++
+ 7 files changed, 61 insertions(+), 37 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 31e944e9..fb66510f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -68,7 +68,7 @@ option(NCNN_SIMPLEOMP "minimal openmp runtime emulation" OFF)
+ option(NCNN_SIMPLESTL "minimal cpp stl structure emulation" OFF)
+ option(NCNN_SIMPLEMATH "minimal cmath" OFF)
+ option(NCNN_THREADS "build with threads" ON)
+-option(NCNN_BENCHMARK "print benchmark information for every layer" OFF)
++option(NCNN_BENCHMARK "print benchmark information for every layer" ON)
+ option(NCNN_C_API "build with C api" ON)
+ option(NCNN_PLATFORM_API "build with platform api candy" ON)
+ option(NCNN_PIXEL "convert and resize from/to image pixel" ON)
+diff --git a/src/layer/arm/lstm_arm.cpp b/src/layer/arm/lstm_arm.cpp
+index a6db35ad..56473651 100644
+--- a/src/layer/arm/lstm_arm.cpp
++++ b/src/layer/arm/lstm_arm.cpp
+@@ -503,6 +503,7 @@ int LSTM_arm::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt)
+ 
+ int LSTM_arm::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_blobs, const Option& opt) const
+ {
++
+ #if NCNN_INT8
+     if (int8_scale_term)
+     {
+@@ -522,12 +523,9 @@ int LSTM_arm::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& to
+     if (opt.use_bf16_storage && elembits == 16)
+         return forward_bf16s(bottom_blobs, top_blobs, opt);
+ #endif
+-
+     int T = bottom_blob.h;
+     int num_directions = direction == 2 ? 2 : 1;
+ 
+-    Mat hidden;
+-    Mat cell;
+     Allocator* hidden_cell_allocator = top_blobs.size() == 3 ? opt.blob_allocator : opt.workspace_allocator;
+     if (bottom_blobs.size() == 3)
+     {
+@@ -536,15 +534,20 @@ int LSTM_arm::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& to
+     }
+     else
+     {
+-        hidden.create(num_output, num_directions, 4u, hidden_cell_allocator);
+         if (hidden.empty())
+-            return -100;
+-        hidden.fill(0.f);
+-
+-        cell.create(hidden_size, num_directions, 4u, hidden_cell_allocator);
++        {
++            hidden.create(num_output, num_directions, 4u, hidden_cell_allocator);
++            if (hidden.empty())
++                return -100;
++            hidden.fill(0.f);
++        }
+         if (cell.empty())
+-            return -100;
+-        cell.fill(0.f);
++        {
++            cell.create(hidden_size, num_directions, 4u, hidden_cell_allocator);
++            if (cell.empty())
++                return -100;
++            cell.fill(0.f);
++        }
+     }
+ 
+     Mat& top_blob = top_blobs[0];
+@@ -1049,15 +1052,20 @@ int LSTM_arm::forward_bf16s(const std::vector<Mat>& bottom_blobs, std::vector<Ma
+     }
+     else
+     {
+-        hidden.create(num_output, num_directions, 4u, hidden_cell_allocator);
+         if (hidden.empty())
+-            return -100;
+-        hidden.fill(0.f);
+-
+-        cell.create(hidden_size, num_directions, 4u, hidden_cell_allocator);
++        {
++            hidden.create(num_output, num_directions, 4u, hidden_cell_allocator);
++            if (hidden.empty())
++                return -100;
++            hidden.fill(0.f);
++        }
+         if (cell.empty())
+-            return -100;
+-        cell.fill(0.f);
++        {
++            cell.create(hidden_size, num_directions, 4u, hidden_cell_allocator);
++            if (cell.empty())
++                return -100;
++            cell.fill(0.f);
++        }
+     }
+ 
+     Mat& top_blob = top_blobs[0];
+diff --git a/src/layer/arm/lstm_arm.h b/src/layer/arm/lstm_arm.h
+index cd654610..4b2413cd 100644
+--- a/src/layer/arm/lstm_arm.h
++++ b/src/layer/arm/lstm_arm.h
+@@ -53,6 +53,8 @@ public:
+ 
+     Mat weight_data_tm;
+ 
++    mutable Mat hidden;
++    mutable Mat cell;
+ #if NCNN_INT8
+     Mat weight_data_tm_int8_descales;
+ #endif
+diff --git a/src/layer/arm/lstm_arm_asimdhp.cpp b/src/layer/arm/lstm_arm_asimdhp.cpp
+index f9d96d21..c4d68b3f 100644
+--- a/src/layer/arm/lstm_arm_asimdhp.cpp
++++ b/src/layer/arm/lstm_arm_asimdhp.cpp
+@@ -879,8 +879,6 @@ int LSTM_arm::forward_fp16s(const std::vector<Mat>& bottom_blobs, std::vector<Ma
+     int T = bottom_blob.h;
+     int num_directions = direction == 2 ? 2 : 1;
+ 
+-    Mat hidden;
+-    Mat cell;
+     Allocator* hidden_cell_allocator = top_blobs.size() == 3 ? opt.blob_allocator : opt.workspace_allocator;
+     if (bottom_blobs.size() == 3)
+     {
+@@ -891,15 +889,20 @@ int LSTM_arm::forward_fp16s(const std::vector<Mat>& bottom_blobs, std::vector<Ma
+     }
+     else
+     {
+-        hidden.create(num_output, num_directions, 4u, hidden_cell_allocator);
+         if (hidden.empty())
+-            return -100;
+-        hidden.fill(0.f);
+-
+-        cell.create(hidden_size, num_directions, 4u, hidden_cell_allocator);
++        {
++            hidden.create(num_output, num_directions, 4u, hidden_cell_allocator);
++            if (hidden.empty())
++                return -100;
++            hidden.fill(0.f);
++        }
+         if (cell.empty())
+-            return -100;
+-        cell.fill(0.f);
++        {
++            cell.create(hidden_size, num_directions, 4u, hidden_cell_allocator);
++            if (cell.empty())
++                return -100;
++            cell.fill(0.f);
++        }
+     }
+ 
+     Mat& top_blob = top_blobs[0];
+diff --git a/src/layer/lstm.cpp b/src/layer/lstm.cpp
+index 53f2ac25..3a4d203c 100644
+--- a/src/layer/lstm.cpp
++++ b/src/layer/lstm.cpp
+@@ -448,6 +448,7 @@ int LSTM::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) cons
+ 
+     int num_directions = direction == 2 ? 2 : 1;
+ 
++
+     // initial hidden state
+     Mat hidden(num_output, 4u, opt.workspace_allocator);
+     if (hidden.empty())
+@@ -548,6 +549,7 @@ int LSTM::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_bl
+ 
+     Mat hidden;
+     Mat cell;
++
+     Allocator* hidden_cell_allocator = top_blobs.size() == 3 ? opt.blob_allocator : opt.workspace_allocator;
+     if (bottom_blobs.size() == 3)
+     {
+diff --git a/src/layer/x86/lstm_x86.cpp b/src/layer/x86/lstm_x86.cpp
+index 70b26b9d..d122a163 100644
+--- a/src/layer/x86/lstm_x86.cpp
++++ b/src/layer/x86/lstm_x86.cpp
+@@ -656,13 +656,11 @@ int LSTM_x86::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& to
+         return forward_int8(bottom_blobs, top_blobs, opt);
+     }
+ #endif
+-
+     const Mat& bottom_blob = bottom_blobs[0];
+     int T = bottom_blob.h;
+     int num_directions = direction == 2 ? 2 : 1;
+ 
+-    Mat hidden;
+-    Mat cell;
++
+     Allocator* hidden_cell_allocator = top_blobs.size() == 3 ? opt.blob_allocator : opt.workspace_allocator;
+     if (bottom_blobs.size() == 3)
+     {
+@@ -671,15 +669,21 @@ int LSTM_x86::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& to
+     }
+     else
+     {
+-        hidden.create(num_output, num_directions, 4u, hidden_cell_allocator);
+         if (hidden.empty())
+-            return -100;
+-        hidden.fill(0.f);
+-
+-        cell.create(hidden_size, num_directions, 4u, hidden_cell_allocator);
++        {
++            hidden.create(num_output, num_directions, 4u, hidden_cell_allocator);
++            if (hidden.empty())
++                return -100;
++            hidden.fill(0.f);
++            
++        }
+         if (cell.empty())
+-            return -100;
+-        cell.fill(0.f);
++        {
++            cell.create(hidden_size, num_directions, 4u, hidden_cell_allocator);
++            if (cell.empty())
++                return -100;
++            cell.fill(0.f);
++        }
+     }
+ 
+     Mat& top_blob = top_blobs[0];
+diff --git a/src/layer/x86/lstm_x86.h b/src/layer/x86/lstm_x86.h
+index 09cde80b..50e40690 100644
+--- a/src/layer/x86/lstm_x86.h
++++ b/src/layer/x86/lstm_x86.h
+@@ -44,6 +44,11 @@ public:
+ 
+     Mat weight_data_tm;
+ 
++    // mutable Mat global_hidden;
++    // mutable Mat global_cell;
++
++    mutable Mat hidden;
++    mutable Mat cell;
+ #if NCNN_INT8
+     Mat weight_data_tm_int8_descales;
+ #endif
+-- 
+2.39.5 (Apple Git-154)
+

@@ -1,0 +1,51 @@
+From bf99e9786046d4f2eace320aab249a0846303c97 Mon Sep 17 00:00:00 2001
+From: Jason <jiacheng.du@JasondeMacBook-Air.local>
+Date: Thu, 17 Apr 2025 21:20:49 +0800
+Subject: [PATCH 2/2] Config openunmix GPU usage
+
+Signed-off-by: Jason <jiacheng.du@JasondeMacBook-Air.local>
+---
+ CMakeLists.txt | 2 +-
+ src/net.cpp    | 8 +++++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fb66510f..34610588 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -59,7 +59,7 @@ endif()
+ 
+ option(NCNN_SHARED_LIB "shared library support" OFF)
+ option(NCNN_ENABLE_LTO "enable link-time optimization" OFF)
+-option(NCNN_OPENMP "openmp support" ON)
++option(NCNN_OPENMP "openmp support" OFF)
+ option(NCNN_STDIO "load model from external file" ON)
+ option(NCNN_STRING "plain and verbose string" ON)
+ option(NCNN_INSTALL_SDK "install ncnn library and headers" ON)
+diff --git a/src/net.cpp b/src/net.cpp
+index 1a130c56..6882f1b5 100644
+--- a/src/net.cpp
++++ b/src/net.cpp
+@@ -1446,12 +1446,18 @@ int Net::load_param(const DataReader& dr)
+ #if NCNN_VULKAN
+         if (!layer && opt.use_vulkan_compute && d->vkdev)
+         {
+-            layer = create_layer_vulkan(layer_type);
++            if ((strcmp(layer_type, "MemoryData") != 0) && (strcmp(layer_type, "Gemm") != 0)) {
++                layer = create_layer_vulkan(layer_type);
++            }
++            if (layer != NULL) {
++                NCNN_LOGE("create_layer_vulkan %s ", layer_type);
++            }
+         }
+ #endif // NCNN_VULKAN
+         if (!layer)
+         {
+             layer = create_layer_cpu(layer_type);
++            NCNN_LOGE("create_layer_CPU %s ", layer_type);
+         }
+         if (!layer)
+         {
+-- 
+2.39.5 (Apple Git-154)
+
